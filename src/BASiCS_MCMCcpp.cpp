@@ -224,7 +224,7 @@ Rcpp::List HiddenBASiCS_MCMCcpp(
         PdeltaAux = PdeltaAux/50; 
         PdeltaAux = -1 + 2*arma::conv_to<arma::mat>::from(PdeltaAux>ar);
         LSdeltaAux = LSdeltaAux + PdeltaAux*0.1;
-        PphiAux = PphiAux/50; PphiAux = -1 + 2*(PphiAux>ar); 
+        PphiAux = PphiAux/50; PphiAux = -1 + 2*(PphiAux>0.234); 
         LSphiAux = LSphiAux - PphiAux*0.1;  
         PnuAux = PnuAux/50; 
         PnuAux = -1 + 2*arma::conv_to<arma::mat>::from(PnuAux>ar);
