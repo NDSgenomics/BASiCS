@@ -52,6 +52,7 @@ arma::mat Hidden_muUpdate(
     arma::vec const& invdelta, 
     arma::vec const& phinu, 
     arma::vec const& sum_bycell_bio, 
+    double const& m_mu,
     double const& s2_mu,
     int const& q0,
     int const& n,

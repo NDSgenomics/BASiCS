@@ -51,6 +51,7 @@ Rcpp::List HiddenBASiCS_MCMCcpp(
     NumericVector s0,
     NumericVector nu0, 
     NumericVector theta0, 
+    double mmu,
     double s2mu,
     double adelta, 
     double bdelta, 
@@ -193,7 +194,7 @@ Rcpp::List HiddenBASiCS_MCMCcpp(
     // 2nd COLUMN IS THE ACCEPTANCE INDICATOR       
     muAux = Hidden_muUpdate(muAux.col(0), exp(LSmuAux), Counts_arma, 
                      1/deltaAux.col(0), phiAux % nuAux.col(0), 
-                     sumByCellBio_arma, s2mu, q0, n,
+                     sumByCellBio_arma, mmu, s2mu, q0, n,
                      y_q0, u_q0, ind_q0);     
     PmuAux += muAux.col(1); if(i>=Burn) muAccept += muAux.col(1);
     

@@ -289,6 +289,7 @@ BASiCS_MCMC <- function(Data, N, Thin, Burn, Regression,
   # If spikes are available
   if (WithSpikes) {
     SpikeInput <- metadata(Data)$SpikeInput
+    PriorParam$m.mu <- mean(SpikeInput)
 
     # If regression case is chosen
     if (Regression) {
@@ -356,6 +357,7 @@ BASiCS_MCMC <- function(Data, N, Thin, Burn, Regression,
                 s0,
                 nu0,
                 rep(theta0, nBatch),
+                PriorParam$m.mu, 
                 PriorParam$s2.mu,
                 PriorParam$a.delta,
                 PriorParam$b.delta,
