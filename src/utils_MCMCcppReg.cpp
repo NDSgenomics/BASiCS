@@ -22,6 +22,31 @@ arma::mat designMatrix(
   return X;
 }
 
+arma::mat designMatrixOriginal(
+    int const& k, /* Number of Gaussian radial basis functions to use for regression */
+    arma::vec const& mu, 
+    double const& variance) 
+{
+  arma::vec x = log(mu);
+  double ran = x.max() - x.min();
+  arma::vec myu = arma::zeros(k-2);
+  myu(0) = x.min();
+  
+  for(int i=1; i < (k-2); i++) {
+    myu(i) = myu(i-1) + ran/(k-3);
+  }
+  double h = (myu(1)-myu(0)) * variance;
+  
+  // Possibly create this matrix outside
+  arma::mat X = arma::ones(x.size(),k);
+  X.col(1) = x;
+  for(int i=0; i < k-2; i++) {
+    X.col(i+2) = exp(-0.5*pow(x-myu(i), 2)/pow(h,2));
+    //X.col(i+1) = pow(x,i+1);
+  }
+  return X;
+}
+
 // [[Rcpp::export]]
 arma::vec estimateRBFLocations(
     arma::vec const& mu,
@@ -61,7 +86,8 @@ arma::mat muUpdateReg(
     double const& sigma2,
     double variance,
     arma::vec locations,
-    double const& mintol)
+    double const& mintol,
+    bool DM_new)
 {
 
   /* PROPOSAL STEP */
@@ -82,8 +108,13 @@ arma::mat muUpdateReg(
     }
   }
 
+  arma::mat X_mu1;
   // This is new due to regression prior on delta
-  arma::mat X_mu1 = designMatrix(mu1, locations, variance);
+  if (DM_new) {
+    X_mu1 = designMatrix(mu1, locations, variance);  
+  } else {
+    X_mu1 = designMatrixOriginal(k, mu1, variance);
+  }
 
   // REGRESSION RELATED FACTOR
   // Some terms might cancel out here; check

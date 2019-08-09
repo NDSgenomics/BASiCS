@@ -190,7 +190,7 @@
 #'
 #' Eling et al (2018). Cell Systems
 #' @export
-BASiCS_MCMC <- function(Data, N, Thin, Burn, Regression, WithSpikes = TRUE, ...)
+BASiCS_MCMC <- function(Data, N, Thin, Burn, Regression, WithSpikes = TRUE, DM_new = TRUE, ...)
 {
   # Checks to ensure input arguments are valid
   HiddenBASiCS_MCMC_InputCheck(Data, N, Thin, Burn, Regression, WithSpikes)
@@ -269,7 +269,8 @@ BASiCS_MCMC <- function(Data, N, Thin, Burn, Regression, WithSpikes = TRUE, ...)
                 ArgsDef$mintol_mu, 
                 ArgsDef$mintol_delta,
                 ArgsDef$mintol_nu,
-                ArgsDef$mintol_theta))
+                ArgsDef$mintol_theta,
+                DM_new))
 
       # Remove epsilons for genes that are not expressed in at least 2 cells
       # Discuss this with John (potentially include an optional arg about this)

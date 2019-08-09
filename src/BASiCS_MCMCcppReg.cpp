@@ -89,7 +89,8 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
     double const& mintol_mu,
     double const& mintol_delta,
     double const& mintol_nu,
-    double const& mintol_theta)
+    double const& mintol_theta,
+    bool DM_new) 
 {
   using arma::ones;
   using arma::zeros;
@@ -196,7 +197,12 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
   arma::mat V1 = arma::zeros(k,k);
   // Model matrix initialization
   arma::vec locations = estimateRBFLocations(muAux.col(0), k);
-  arma::mat X = designMatrix(muAux.col(0), locations, variance);
+  arma::mat X;
+  if (DM_new) {
+    X = designMatrix(muAux.col(0), locations, variance);
+  } else {
+    X = designMatrixOriginal(k, muAux.col(0), variance);
+  }
 
   StartSampler(N);
 
@@ -205,7 +211,9 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
 
     Rcpp::checkUserInterrupt();
 
-    if(i==Burn) EndBurn();
+    if (i == Burn) {
+      EndBurn();
+    }
 
     Ibatch++;
 
@@ -225,11 +233,22 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
     // UPDATE OF THETA:
     // 1st ELEMENT IS THE UPDATE,
     // 2nd ELEMENT IS THE ACCEPTANCE INDICATOR
-    thetaAux = thetaUpdateBatch(thetaAux.col(0), exp(LSthetaAux),
-                                BatchDesign_arma, BatchSizes,
-                                sAux, nuAux.col(0), atheta, btheta, n,
-                                nBatch, mintol_theta);
-    PthetaAux += thetaAux.col(1); if(i>=Burn) {thetaAccept += thetaAux.col(1);}
+    thetaAux = thetaUpdateBatch(thetaAux.col(0), 
+                                exp(LSthetaAux),
+                                BatchDesign_arma, 
+                                BatchSizes,
+                                sAux, 
+                                nuAux.col(0), 
+                                atheta, 
+                                btheta, 
+                                n,
+                                nBatch,
+                                mintol_theta);
+
+    PthetaAux += thetaAux.col(1);
+    if (i >= Burn) {
+      thetaAccept += thetaAux.col(1);
+    }
     thetaBatch = BatchDesign_arma * thetaAux.col(0);
 
     // UPDATE OF MU:
@@ -255,37 +274,81 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
                         sigma2Aux,
                         variance,
                         locations,
-                        mintol_mu);
+                        mintol_mu,
+                        DM_new);
 
-    PmuAux += muAux.col(1); if(i>=Burn) muAccept += muAux.col(1);
+    PmuAux += muAux.col(1);
+    if (i >= Burn) {
+      muAccept += muAux.col(1);
+    }
 
     // Update design matrix every iteration based on new mu,
     // but with fixed locations after adaptation
-    X = designMatrix(muAux.col(0), locations, variance);
+    if (DM_new) {
+      X = designMatrix(muAux.col(0), locations, variance);
+    } else {
+      X = designMatrixOriginal(k, muAux.col(0), variance);
+    }
     
     // UPDATE OF S
-    sAux = sUpdateBatch(sAux, nuAux.col(0), thetaBatch,
-                        as, bs, BatchDesign_arma, n, y_n);
+    sAux = sUpdateBatch(sAux,
+                        nuAux.col(0),
+                        thetaBatch,
+                        as,
+                        bs,
+                        BatchDesign_arma,
+                        n,
+                        y_n);
 
     // UPDATE OF DELTA:
     // 1st COLUMN IS THE UPDATE,
     // 2nd COLUMN IS THE ACCEPTANCE INDICATOR
     // REGRESSION
-    deltaAux = deltaUpdateReg(deltaAux.col(0), exp(LSdeltaAux), Counts_arma,
+    deltaAux = deltaUpdateReg(deltaAux.col(0),
+                              exp(LSdeltaAux),
+                              Counts_arma,
                               muAux.col(0),
-                              phiAux % nuAux.col(0), q0, n, y_q0, u_q0, ind_q0,
-                              lambdaAux, X, sigma2Aux, betaAux, mintol_delta);
-    PdeltaAux += deltaAux.col(1); if(i>=Burn) deltaAccept += deltaAux.col(1);
+                              phiAux % nuAux.col(0),
+                              q0,
+                              n,
+                              y_q0,
+                              u_q0,
+                              ind_q0,
+                              lambdaAux,
+                              X,
+                              sigma2Aux,
+                              betaAux,
+                              mintol_delta);
+    PdeltaAux += deltaAux.col(1);
+    if (i >= Burn) {
+      deltaAccept += deltaAux.col(1);
+    }
 
     // UPDATE OF NU:
     // 1st COLUMN IS THE UPDATE,
     // 2nd COLUMN IS THE ACCEPTANCE INDICATOR
-    nuAux = nuUpdateBatch(nuAux.col(0), exp(LSnuAux), Counts_arma, SumSpikeInput,
+    nuAux = nuUpdateBatch(nuAux.col(0),
+                          exp(LSnuAux),
+                          Counts_arma,
+                          SumSpikeInput,
                           BatchDesign_arma,
-                          muAux.col(0), 1/deltaAux.col(0),
-                          phiAux, sAux, thetaBatch, sumByGeneAll_arma, q0, n,
-                          y_n, u_n, ind_n, mintol_nu);
-    PnuAux += nuAux.col(1); if(i>=Burn) nuAccept += nuAux.col(1);
+                          muAux.col(0),
+                          1 / deltaAux.col(0),
+                          phiAux,
+                          sAux,
+                          thetaBatch,
+                          sumByGeneAll_arma,
+                          q0,
+                          n,
+                          y_n,
+                          u_n,
+                          ind_n,
+                          mintol_nu);
+
+    PnuAux += nuAux.col(1);
+    if (i >= Burn) {
+      nuAccept += nuAux.col(1);
+    }
 
     // UPDATES OF REGRESSION RELATED PARAMETERS
     V1 = inv_V0 + X.t() * diagmat(lambdaAux) * X;
@@ -296,16 +359,28 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
 
       // UPDATES OF BETA AND SIGMA2 (REGRESSION RELATED PARAMETERS)
       betaAux = betaUpdateReg(sigma2Aux, VAux, mAux);
-      sigma2Aux = sigma2UpdateReg(deltaAux.col(0), betaAux, lambdaAux, V1,
-                                  mInvVm0, mAux, sigma2_a0, sigma2_b0, q0);
+      sigma2Aux = sigma2UpdateReg(deltaAux.col(0),
+                                  betaAux,
+                                  lambdaAux,
+                                  V1,
+                                  mInvVm0,
+                                  mAux,
+                                  sigma2_a0,
+                                  sigma2_b0,
+                                  q0);
 
     }
     // UPDATE OF LAMBDA (REGRESSION RELATED PARAMETER)
-    lambdaAux = lambdaUpdateReg(deltaAux.col(0), X, betaAux, sigma2Aux,
-                                eta0, q0, y_q0);
+    lambdaAux = lambdaUpdateReg(deltaAux.col(0),
+                                X,
+                                betaAux,
+                                sigma2Aux,
+                                eta0,
+                                q0,
+                                y_q0);
     // UPDATE OF EPSILON
     // Direct calculation conditional on regression related parameters
-    epsilonAux = log(deltaAux.col(0)) - X*betaAux;
+    epsilonAux = log(deltaAux.col(0)) - X * betaAux;
 
     // STOP ADAPTING THE PROPOSAL VARIANCES AFTER EndAdapt ITERATIONS
     if (i < EndAdapt) {

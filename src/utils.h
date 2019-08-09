@@ -141,9 +141,15 @@ arma::mat designMatrix(
     arma::vec const& locations,
     double const& variance);
 
+
 arma::vec estimateRBFLocations(
     arma::vec const& mu,
     int const& k);
+
+arma::mat designMatrixOriginal(
+    int const& k,
+    arma::vec const& mu, 
+    double const& variance);
 
 arma::mat muUpdateReg(
     arma::vec const& mu0, 
@@ -165,7 +171,8 @@ arma::mat muUpdateReg(
     double const& sigma2,
     double variance,
     arma::vec locations,
-    double const& mintol);
+    double const& mintol,
+    bool DM_new);
 
 arma::mat deltaUpdateReg(
     arma::vec const& delta0, 

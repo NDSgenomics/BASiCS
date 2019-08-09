@@ -96,7 +96,8 @@ Rcpp::List HiddenBASiCS_MCMCcppReg(
     double sigma20, 
     double eta0, 
     NumericVector lambda0, 
-    double const& variance);
+    double const& variance,
+    bool DM_new);
 
 // MCMC sampler for the non-spike case
 Rcpp::List HiddenBASiCS_MCMCcppNoSpikes(
