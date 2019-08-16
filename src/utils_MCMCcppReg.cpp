@@ -27,8 +27,8 @@ arma::mat designMatrixOriginal(
   return X;
 }
 
-
 // estimate GRBF locations
+// [[Rcpp::export]]
 arma::vec estimateRBFLocations(
     arma::vec const& mu,
     int const& k)
