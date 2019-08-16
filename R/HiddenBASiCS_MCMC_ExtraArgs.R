@@ -28,20 +28,27 @@ HiddenBASiCS_MCMC_ExtraArgs <- function(Data,
                                           p.phi = rep(1, times = GPar$n),
                                           a.s = 1,
                                           b.s = 1,
+                                          eta = 5,
+                                          m = rep(0, k),
+                                          V = diag(k),
+                                          a.sigma2 = 2,
+                                          b.sigma2 = 2,
                                           a.theta = 1,
-                                          b.theta = 1),
-                                        eta = 5,
+                                          b.theta = 1
+                                        ),
                                         Start = HiddenBASiCS_MCMC_Start(
                                           Data,
-                                          PriorParam,
-                                          WithSpikes,
-                                          ),
+                                          eta = PriorParam$eta,
+                                          m = PriorParam$m,
+                                          V = PriorParam$V,
+                                          a.sigma2 = PriorParam$a.sigma2,
+                                          b.sigma2 = PriorParam$b.sigma2,
+                                          WithSpikes = WithSpikes
+                                        ),
                                         mintol_mu = 1e-3,
                                         mintol_delta = 1e-3,
                                         mintol_nu = 1e-5,
-                                        mintol_theta = 1e-4
-) {
-
+                                        mintol_theta = 1e-4) {
   PriorDelta <- match.arg(PriorDelta)
 
   if (missing(PriorDelta) & !Regression) {
@@ -56,11 +63,6 @@ HiddenBASiCS_MCMC_ExtraArgs <- function(Data,
     }
   }
 
-  if (Regression) {
-    PriorParam$m <- rep(0, k); PriorParam$V <- diag(k)
-    PriorParam$a.sigma2 <- 2; PriorParam$b.sigma2 <- 2
-    PriorParam$eta <- eta
-  }
 
   # Validity checks
   if (!(PriorParam$s2.mu > 0 & length(PriorParam$s2.mu) == 1 &

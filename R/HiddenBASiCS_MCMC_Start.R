@@ -1,13 +1,18 @@
-# Used in BASiCS_MCMC
 HiddenBASiCS_MCMC_Start <- function(Data,
-                                    PriorParam,
+                                    Regression = !is.null(eta),
                                     WithSpikes,
+                                    eta = NULL,
+                                    m = rep(0, k),
+                                    V = diag(k),
+                                    k = 12,
+                                    a.sigma2 = 2,
+                                    b.sigma2 = 2,
                                     ls.mu0 = -4,
                                     ls.delta0 = -2,
                                     ls.phi0 = 11,
                                     ls.nu0 = -10,
-                                    ls.theta0 = -4)
-{
+                                    ls.theta0 = -4) {
+
   if (!is(Data, "SingleCellExperiment")) {
     stop("'Data' is not a SingleCellExperiment class object.")
   }
@@ -99,18 +104,24 @@ HiddenBASiCS_MCMC_Start <- function(Data,
     ls.theta0 <- as.numeric(ls.theta0)
 
     # Output list
-    out <- list(mu0 = mu0, delta0 = delta0,
-                phi0 = phi0, s0 = s0,
-                nu0 = nu0, theta0 = theta0,
-                ls.mu0 = ls.mu0, ls.delta0 = ls.delta0,
-                ls.phi0 = ls.phi0, ls.nu0 = ls.nu0, ls.theta0 = ls.theta0)
-
+    out <- list(
+      mu0 = mu0,
+      delta0 = delta0,
+      phi0 = phi0,
+      s0 = s0,
+      nu0 = nu0,
+      theta0 = theta0,
+      ls.mu0 = ls.mu0,
+      ls.delta0 = ls.delta0,
+      ls.phi0 = ls.phi0,
+      ls.nu0 = ls.nu0,
+      ls.theta0 = ls.theta0
+    )
     # Starting values for regression-related parameters
-    if (!is.null(PriorParam$eta)) {
-      out$beta0 <- mvrnorm(1, PriorParam$m, PriorParam$V)
-      out$sigma20 <- rgamma(1, PriorParam$a.sigma2, PriorParam$b.sigma2)
-      out$lambda0 <- rgamma(q.bio, shape = PriorParam$eta/2,
-                        rate = PriorParam$eta/2)
+    if (Regression) {
+      out$beta0 <- mvrnorm(1, m, V)
+      out$sigma20 <- rgamma(1, a.sigma2, b.sigma2)
+      out$lambda0 <- rgamma(q.bio, shape = eta / 2, rate = eta / 2)
     }
 
     return(out)
